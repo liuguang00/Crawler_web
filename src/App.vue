@@ -19,4 +19,16 @@
     color: #2c3e50;
     margin-top: 60px;
   }
+
+  /*图片预览 缩略图*/
+  .preview figure {
+    float: left;
+    width: 15%;
+    height: 300px;
+    margin: 1.5%;
+  }
+
+    .preview figure img {
+      width: 100%;
+    }
 </style>

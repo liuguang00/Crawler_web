@@ -4,8 +4,10 @@
     "\\config",
     "\\src",
     "\\src\\components",
-    "\\src\\router"
+    "\\src\\plugins",
+    "\\src\\router",
+    "\\static"
   ],
-  "SelectedNode": "\\src\\components\\Home.vue",
+  "SelectedNode": "\\src\\components\\Imgview.vue",
   "PreviewInSolutionExplorer": false
 }

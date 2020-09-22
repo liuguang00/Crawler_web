@@ -1,26 +1,15 @@
 <template>
-  <div>
-    <div>
+  <div class="wrap">
+    <div id="left">
       <p>已下载</p>
-      <p v-for="item in down">
-        关键字: {{item.keyword}}  数量: {{item.count}} 路径: {{item.path}}
-      </p>
+      <a-table :columns="cols" :data-source="down" :rowKey='record=>record.id'>
+        <template slot="view" slot-scope="text, record">
+          <a-button @click="toview(record.path)">预览</a-button>
+        </template>
+      </a-table>
     </div>
-    <div>
-      <p>已暂停</p>
-      <div v-for="item in undown" >
-        <p>关键字: {{item.keyword}}  数量: {{item.count}} 路径: {{item.path}} 进度：{{item.addcnt}} 目标：{{item.target}}</p>
-        <button @click="downchange(item.id,item.finish)">继续</button>
-      </div>
-    </div>
-    <div>
-      <p>正在下载</p>
-      <div v-for="item in downing">
-        <p>关键字: {{item.keyword}}  数量: {{item.count}} 路径: {{item.path}} 进度：{{item.addcnt}} 目标：{{item.target}}</p>
-        <button @click="downchange(item.id,item.finish)">暂停</button>
-      </div>
-    </div>
-    <div>
+
+    <div id="main">
       <p>Home关键字</p>
       <input v-model="keyword" placeholder="请输入关键字" />
       <div>
@@ -40,11 +29,91 @@
       <p>存储路径</p>
       <input v-model="path" placeholder="请输入存储路径" />
       <button @click="home">爬取</button>
+      <div>
+        <!--<p>正在下载</p>-->
+        <a-table :columns="columns" :data-source="downing">
+          <template slot="progress" slot-scope="text, record">
+            <a-progress :percent=record.progress size="small" />
+          </template>
+          <template slot="action" slot-scope="text, record">
+            <a-button @click="downchange(record.id,record.finish)">暂停</a-button>
+          </template>
+        </a-table>
+      </div>
+    </div>
+    <div id="right">
+      <p>已暂停</p>
+      <a-table :columns="columns" :data-source="undown">
+        <template slot="action" slot-scope="text, record">
+          <a-button @click="downchange(record.id,record.finish)">继续</a-button>
+        </template>
+      </a-table>
     </div>
   </div>
 </template>
 
 <script>
+  const cols = [
+    {
+      title: '关键字',
+      dataIndex: 'keyword',
+      key: 'keyword',
+      width: 100
+    },
+    {
+      title: '数量',
+      dataIndex: 'count',
+      key: 'count',
+      width: 100
+    },
+    {
+      title: '路径',
+      dataIndex: 'path',
+      key: 'path',
+      width: 200
+    },
+    {
+      title: '预览',
+      dataIndex: 'view',
+      width: 100,
+      scopedSlots: { customRender: 'view' },
+    }
+  ];
+
+  const columns = [
+    {
+      title: '关键字',
+      dataIndex: 'keyword',
+      key: 'keyword',
+      width: 100
+    },
+    {
+      title: '数量',
+      dataIndex: 'count',
+      key: 'count',
+      width: 100
+    },
+    {
+      title: '路径',
+      dataIndex: 'path',
+      key: 'path',
+      width: 200
+    },
+    {
+      title: '进度',
+      dataIndex: 'progress',
+      key: 'progress',
+      width: 200,
+      scopedSlots: { customRender: 'progress' },
+    },
+    {
+      title: '动作',
+      dataIndex: 'action',
+      width: 100,
+      scopedSlots: { customRender: 'action'},
+    },
+  ];
+
 export default {
     name: 'Home',
     data () {
@@ -57,7 +126,9 @@ export default {
         undown: [],
         downing: [],
         timer: null,
-        timerstate: 0
+        timerstate: 0,
+        columns,
+        cols,
       }
     },
     watch: {
@@ -101,6 +172,13 @@ export default {
       },
       stoptimer() {
         clearInterval(this.timer);
+      },
+      toview(rpath) {
+        this.$router.push({
+              'path': '/imgview',
+              'name': 'Imgview',
+              params: { path: rpath }
+            });
       },
       downchange(rid,finish) {
         if (finish == 0) {
@@ -248,3 +326,26 @@ export default {
   }
 </script>
 
+<style>
+  .wrap {
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+  }
+
+  #left {
+    background: #ccffff;
+    flex: 0 0 400px;
+  }
+
+  #right {
+    background: #ccffff;
+    flex: 0 0 400px;
+  }
+
+  #main {
+    background: #ffcccc;
+    flex: 1;
+  }
+</style>
