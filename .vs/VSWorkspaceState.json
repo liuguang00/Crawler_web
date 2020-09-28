@@ -3,11 +3,12 @@
     "",
     "\\config",
     "\\src",
+    "\\src\\assets",
     "\\src\\components",
     "\\src\\plugins",
     "\\src\\router",
     "\\static"
   ],
-  "SelectedNode": "\\src\\components\\Imgview.vue",
+  "SelectedNode": "\\src\\components\\Home.vue",
   "PreviewInSolutionExplorer": false
 }

@@ -2,7 +2,7 @@
   <div class="wrap">
     <div id="left">
       <p>已下载</p>
-      <a-table :columns="cols" :data-source="down" :rowKey='record=>record.id'>
+      <a-table :pagination="pagination" :columns="cols" :data-source="down" :rowKey='record=>record.id'>
         <template slot="view" slot-scope="text, record">
           <a-button @click="toview(record.path)">预览</a-button>
         </template>
@@ -39,11 +39,19 @@
             <a-button @click="downchange(record.id,record.finish)">暂停</a-button>
           </template>
         </a-table>
+        <a-table :columns="columns" :data-source="waitdown">
+          <template slot="progress" slot-scope="text, record">
+            <a-progress :percent=record.progress size="small" />
+          </template>
+        </a-table>
       </div>
     </div>
     <div id="right">
       <p>已暂停</p>
       <a-table :columns="columns" :data-source="undown">
+        <template slot="progress" slot-scope="text, record">
+          <a-progress :percent=record.progress size="small" />
+        </template>
         <template slot="action" slot-scope="text, record">
           <a-button @click="downchange(record.id,record.finish)">继续</a-button>
         </template>
@@ -70,12 +78,12 @@
       title: '路径',
       dataIndex: 'path',
       key: 'path',
-      width: 200
+      width: 300
     },
     {
       title: '预览',
       dataIndex: 'view',
-      width: 100,
+      width: 50,
       scopedSlots: { customRender: 'view' },
     }
   ];
@@ -125,10 +133,15 @@ export default {
         down: [],
         undown: [],
         downing: [],
+        waitdown: [],
+        waitlist: [],
         timer: null,
         timerstate: 0,
         columns,
         cols,
+        pagination: {
+          defaultPageSize: 5
+        }
       }
     },
     watch: {
@@ -141,6 +154,16 @@ export default {
           if (newValue == 0 && oldValue == 1) {
             console.log("timerstate从1到0");
             this.stoptimer();
+            console.log(this.waitlist);
+            if (this.waitlist != undefined && this.waitlist.length > 0) {
+              let cur = this.waitlist[0];
+              this.keyword = cur.keyword;
+              this.picked = cur.engine;
+              this.path = cur.path;
+              this.page = cur.page;
+              this.home();
+              this.waitlist.shift();
+            }
           }
         }
       },
@@ -182,6 +205,10 @@ export default {
       },
       downchange(rid,finish) {
         if (finish == 0) {
+          if (this.downing != undefined && this.downing.length > 0) {
+            alert("当前已有下载任务，请暂停重试");
+            return;
+          }
           if (this.timerstate == 0) {
             this.timerstate = 1;
           }
@@ -267,6 +294,19 @@ export default {
           .catch(failResponse => {
             console.log(failResponse);
           });
+        this.$axios
+          .get('/api/info/waitdown', {
+            params: {
+              id: Uid
+            }
+          })
+          .then(res => {
+            console.log(res);
+            this.waitdown = res.data.data;
+          })
+          .catch(failResponse => {
+            console.log(failResponse);
+          });
       },
       home() {
         let Uid = localStorage.getItem('ID');
@@ -281,45 +321,81 @@ export default {
         //setTimeout(() => {
          // this.downinfo()
         //}, 1000);
-        this.$axios
-          .get('/api/spider/new', {
-            params: {
-              id: Uid,
-              keyword: this.keyword,
-              engine: this.picked,
-              path: this.path,
-              page: this.page
-            }
-          })
-          .then(res => {
-            this.downinfo();
-            let r = JSON.stringify(res);
-            let info = eval('(' + r + ')');
-            console.log(info.data);
-          })
-          .catch(failResponse => {
-            console.log(failResponse);
+        if (this.downing == undefined || this.downing.length <= 0) {
+          this.$axios
+            .get('/api/spider/new', {
+              params: {
+                id: Uid,
+                keyword: this.keyword,
+                engine: this.picked,
+                path: this.path,
+                page: this.page,
+                wait: 0
+              }
+            })
+            .then(res => {
+              this.downinfo();
+              let r = JSON.stringify(res);
+              let info = eval('(' + r + ')');
+              console.log(info.data);
+            })
+            .catch(failResponse => {
+              console.log(failResponse);
+            });
+          this.$axios
+            .get('/api/spider', {
+              params: {
+                id: Uid,
+                keyword: this.keyword,
+                engine: this.picked,
+                path: this.path,
+                page: this.page
+              }
+            })
+            .then(res => {
+              this.downinfo();
+              let r = JSON.stringify(res);
+              let info = eval('(' + r + ')');
+              console.log(info.data);
+
+              //alert(info.data);
+            })
+            .catch(failResponse => {
+              console.log(failResponse);
+            })
+        }
+        else {
+          console.log("wait");
+          this.waitlist.push({
+            id: Uid,
+            keyword: this.keyword,
+            engine: this.picked,
+            path: this.path,
+            page: this.page
           });
-        this.$axios
-          .get('/api/spider', {
-            params: {
-              id: Uid,
-              keyword: this.keyword,
-              engine: this.picked,
-              path: this.path,
-              page: this.page
-            }
-          })
-          .then(res => {
-            this.downinfo();
-            let r = JSON.stringify(res);
-            let info = eval('(' + r + ')');
-            console.log(info.data);
-            //alert(info.data);
-          })
-          .catch(failResponse => {
-            console.log(failResponse);
-          })
+          console.log("wait");
+          console.log(this.waitlist);
+          this.$axios
+            .get('/api/spider/new', {
+              params: {
+                id: Uid,
+                keyword: this.keyword,
+                engine: this.picked,
+                path: this.path,
+                page: this.page,
+                wait: 1
+              }
+            })
+            .then(res => {
+              this.downinfo();
+              let r = JSON.stringify(res);
+              let info = eval('(' + r + ')');
+              console.log(info.data);
+            })
+            .catch(failResponse => {
+              console.log(failResponse);
+            });
+        }
 
       }
     }
@@ -328,24 +404,28 @@ export default {
 
 <style>
   .wrap {
-    margin: 0 auto;
+    background: #E0FFFF;
+    margin: 0 auto 0 auto;
     width: 100%;
     height: 100%;
     display: flex;
+    background-size: cover;
+    position: fixed;
+    background-position: center;
   }
 
   #left {
-    background: #ccffff;
+    /*background: #EEEEEE;*/
     flex: 0 0 400px;
   }
 
   #right {
-    background: #ccffff;
+   /* background: #EEEEEE;*/
     flex: 0 0 400px;
   }
 
   #main {
-    background: #ffcccc;
+/*    background: #99FFFF;*/
     flex: 1;
   }
 </style>
