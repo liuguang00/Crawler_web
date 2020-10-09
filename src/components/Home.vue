@@ -36,7 +36,8 @@
             <a-progress :percent=record.progress size="small" />
           </template>
           <template slot="action" slot-scope="text, record">
-            <a-button @click="downchange(record.id,record.finish)">暂停</a-button>
+            <a-button class="bt"  @click="downchange(record.id,record.finish)">暂停</a-button>
+            <a-button class="bt"  @click="toview(record.path)">预览</a-button>
           </template>
         </a-table>
         <a-table :columns="columns" :data-source="waitdown">
@@ -53,7 +54,8 @@
           <a-progress :percent=record.progress size="small" />
         </template>
         <template slot="action" slot-scope="text, record">
-          <a-button @click="downchange(record.id,record.finish)">继续</a-button>
+          <a-button class="bt" @click="downchange(record.id,record.finish)">继续</a-button>
+          <a-button class="bt" @click="toview(record.path)">预览</a-button>
         </template>
       </a-table>
     </div>
@@ -117,9 +119,9 @@
     {
       title: '动作',
       dataIndex: 'action',
-      width: 100,
+      width: 50,
       scopedSlots: { customRender: 'action'},
-    },
+    }
   ];
 
 export default {
@@ -421,11 +423,15 @@ export default {
 
   #right {
    /* background: #EEEEEE;*/
-    flex: 0 0 400px;
+    flex: 0 0 450px;
   }
 
   #main {
 /*    background: #99FFFF;*/
     flex: 1;
+  }
+
+  .bt {
+      margin: 5px;
   }
 </style>
